@@ -19,8 +19,8 @@ router.get('/phenomenon/:iri',function(req,res){
 });
 
 router.post('/phenomenon/update/:iri',function(req,res){
-  console.dir(req.body.phenomenon);
-  QueriesController.updatePhenomenon(req.params.iri, req.body.phenomenon)
+  console.dir(req.body);
+  QueriesController.updatePhenomenon(req.params.iri, req.body)
   .then(res.end("END"))
 });
 

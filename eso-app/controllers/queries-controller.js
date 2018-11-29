@@ -113,10 +113,10 @@ module.exports.updatePhenomenon = function (iri, phenomenon) {
     return client
     .query(SPARQL`INSERT DATA {
         ${{s: iri}} rdf:type s:phenomenon;
-                    rdfs:label  ${{value: phenomenon.name.label, lang: phenomenon.name.lang}};
-                    rdfs:comment  ${{value: phenomenon.description.comment, lang: phenomenon.description.lang}};
-                    s:describedBy ${{uo: phenomenon.unit}};
-                    `+ (phenomenon.domain ?`s:hasDomain ${{s: phenomenon.domain}}.`:``) + `
+                    rdfs:label  ${{value: name.label, lang: name.lang}};
+                    rdfs:comment  ${{value: description.comment, lang: description.lang}};
+                    s:describedBy ${{uo: unit}};
+                    `+ (domain ?`s:hasDomain ${{s: domain}}.`:``) + `
             }`)
     .execute()
     .then(Promise.resolve(console.log("everthing ok")))
