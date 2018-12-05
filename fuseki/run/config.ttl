@@ -6,14 +6,13 @@
 <http://jena.apache.org/fuseki#> .
 
 :service_tdb_all  a                   fuseki:Service ;
-        rdfs:label                    "myPelletSenph" ;
+        rdfs:label                    "senphPublicEndpoint" ;
         fuseki:dataset                :dataset ;
-        fuseki:name                   "myPelletSenph" ;
-        fuseki:serviceQuery           "query" , "sparql" ;
+        fuseki:name                   "senphPublicEndpoint" ;
+        fuseki:serviceQuery           "query" ;
         fuseki:serviceReadGraphStore  "get" ;
         fuseki:serviceReadWriteGraphStore
                 "data" ;
-        fuseki:serviceUpdate          "update" ;
         fuseki:serviceUpload          "upload" .
 
 :dataset a ja:RDFDataset ;
@@ -23,7 +22,7 @@
   ja:baseModel <#tdbGraph>;
   ja:reasoner   [
     ja:reasonerURL 
- <http://jena.hpl.hp.com/2003/OWLMicroFBRuleReasoner>]
+ <http://jena.hpl.hp.com/2003/OWLFBRuleReasoner>]
   .  
 
 <#tdbGraph> rdf:type tdb:GraphTDB ;
@@ -31,4 +30,4 @@
 
 :tdb_dataset_readwrite  a            
   tdb:DatasetTDB ;  tdb:location 
-  "/home/b_kar02/eso-app/fuseki/run/databases/pelletSenph"
+  "../fuseki/run/databases/senph"

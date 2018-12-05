@@ -31,4 +31,4 @@
 
 :tdb_dataset_readwrite  a            
   tdb:DatasetTDB ;  tdb:location 
-  "/home/b_kar02/eso-app/fuseki/run/databases/senph"
+  "../fuseki/run/databases/senph"
