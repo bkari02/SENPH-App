@@ -6,8 +6,6 @@ var logger = require('morgan');
 var bodyParser = require("body-parser");
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var updateRouter = require('./routes/update');
 var queriesRouter = require('./routes/queries');
 
 
@@ -26,8 +24,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/update', updateRouter);
 app.use('/queries', queriesRouter);
 app.use(express.static('owl'));
 
