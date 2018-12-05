@@ -1,7 +1,7 @@
 const SparqlClient = require('sparql-client-2');
 const SPARQL = SparqlClient.SPARQL;
-const endpoint = 'http://localhost:3030/senph/sparql';
-const updatepoint = 'http://localhost:3030/senph/update';
+const endpoint = 'http://localhost:3030/senphfoafuo/sparql';
+const updatepoint = 'http://localhost:3030/senphfoafuo/update';
 const unitpoint = 'http://localhost:3030/uo/sparql';
 
 
@@ -28,31 +28,61 @@ const client = new SparqlClient(endpoint, {
 module.exports.getPhenomenon = function (iri) {
     //Fehlt noch in Query: ?units rdfs:label ?unitsLabel.
     return client
+    // .query(SPARQL`
+    // Select Distinct ?sensors ?domains ?units 
+    // (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?label),'","value":"',?label,'"');separator="},{"),'}]') as ?labels) 
+    // (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?description),'","value":"',?description,'"');separator="},{"),'}]') as ?descriptions) 
+    // (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?sensorsLabel),'","value":"',?sensorsLabel,'"');separator="},{"),'}]') as ?sensorLabels) 
+    // (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?domainsLabel),'","value":"',?domainsLabel,'"');separator="},{"),'}]') as ?domainLabels) 
+    // (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?unitsLabel),'","value":"',?unitsLabel,'"');separator="},{"),'}]') as ?unitsLabel)
+    //                  WHERE {   
+    //                     ${{s: iri}}  rdfs:label ?label.
+    //                     OPTIONAL
+    //                     {${{s: iri}} rdfs:comment ?description.
+    //                     }
+    //                     OPTIONAL
+    //                     {${{s: iri}} s:describedBy ?units.
+    //                     }
+    //                     OPTIONAL
+    //                     {${{s: iri}} s:hasDomain ?domains.
+    //                     ?domains rdfs:label ?domainsLabel.
+    //                     } 
+    //                     OPTIONAL
+    //                     {${{s: iri}} s:measurableBy ?selement.
+    //                     ?selement   s:hasSensor ?sensors.
+    //                     ?sensors rdfs:label ?sensorsLabel.}            
+    //                  }
+    //                  group by ?sensors ?domains ?units`)
     .query(SPARQL`
-    Select Distinct ?sensors ?domains ?units 
-    (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?label),'","value":"',?label,'"');separator="},{"),'}]') as ?labels) 
-    (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?description),'","value":"',?description,'"');separator="},{"),'}]') as ?descriptions) 
-    (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?sensorsLabel),'","value":"',?sensorsLabel,'"');separator="},{"),'}]') as ?sensorLabels) 
-    (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?domainsLabel),'","value":"',?domainsLabel,'"');separator="},{"),'}]') as ?domainLabels) 
-    (concat('[{',group_concat (distinct concat('"type": "literal","xml:lang": "',lang(?unitsLabel),'","value":"',?unitsLabel,'"');separator="},{"),'}]') as ?unitsLabel)
+    Select Distinct ?iri ?irid ?label ?description ?sensors ?sensorsLabel ?domains ?domainsLabel ?units 
                      WHERE {   
-                        ${{s: iri}}  rdfs:label ?label.
-                        OPTIONAL
-                        {${{s: iri}} rdfs:comment ?description.
+  						{	
+                            ${{s: iri}}  rdfs:label ?label.
+                          ?iri ?rdf ?label
                         }
-                        OPTIONAL
-                        {${{s: iri}} s:describedBy ?units.
+                        UNION 
+                        {   
+                            ${{s: iri}} rdfs:comment ?description.
+                            ?irid ?rdf ?description
                         }
-                        OPTIONAL
-                        {${{s: iri}} s:hasDomain ?domains.
-                        ?domains rdfs:label ?domainsLabel.
+                        UNION
+                        {	
+                            ${{s: iri}} s:describedBy ?units.
+                        }
+                        UNION
+                        {
+                            ${{s: iri}} s:hasDomain ?domains.
+                          ?domains rdfs:label ?domainsLabel.
                         } 
-                        OPTIONAL
-                        {${{s: iri}} s:measurableBy ?selement.
-                        ?selement   s:hasSensor ?sensors.
-                        ?sensors rdfs:label ?sensorsLabel.}            
+                        UNION
+                        {
+                            ${{s: iri}} s:measurableBy ?selement.
+                          ?selement   s:isElementOf ?sensors.
+                          ?sensors rdfs:label ?sensorsLabel.}            
                      }
-                     group by ?sensors ?domains ?units`)
+                Group BY ?sensors  ?domains ?units ?iri  ?label ?irid ?description  ?sensorsLabel ?domainsLabel
+                ORDER BY ?sensors ?iri ?irid ?domain ?units
+          `)
     .execute()
     .then(res => res.results.bindings)
     .catch(function (error) {
@@ -90,6 +120,68 @@ module.exports.getSensors = function () {
       });
 }
 
+
+module.exports.getSensor = function (iri) {
+    //Fehlt noch in Query: ?units rdfs:label ?unitsLabel.
+    return client
+    .query(SPARQL`
+    Select Distinct ?iri ?irid ?label ?description ?datasheet ?image ?lifeperiod ?manufacturer ?price ?phenomena ?phenomenaLabel ?unit ?device ?devicesLabel
+                     WHERE {   
+  						{	
+                            ${{s: iri}}  rdfs:label ?label.
+                          ?iri ?rdf ?label
+                        }
+                        UNION 
+                        {   
+                            ${{s: iri}} rdfs:comment ?description.
+                            ?irid ?rdf ?description
+                        }
+                        UNION
+                        {	
+                            ${{s: iri}} s:dataSheet ?datasheet.
+                        }
+                        UNION
+                        {
+                            ${{s: iri}} s:image ?image.
+                        } 
+                        UNION
+                        {
+                            ${{s: iri}} s:lifePeriod ?lifeperiod.
+                        } 
+                        UNION
+                        {
+                            ${{s: iri}} s:manufacturer ?manufacturer.
+                        }
+                        UNION
+                        {
+                            ${{s: iri}} s:priceInEuro ?price.
+                        }
+                        UNION
+                        {
+                            ${{s: iri}} s:hasElement ?selement.
+                          ?selement   s:canMeasure ?phenomena.
+                          ?phenomena rdfs:label ?phenomenaLabel.
+                          ?selement s:hasAccuracyUnit ?unit
+                        }
+                        UNION
+                        {
+                            ${{s: iri}} s:isSensorOf ?devices.
+                          ?devices  rdfs:label ?devicesLabel
+                        }  
+
+                     }
+                Group BY ?iri ?irid ?label ?description ?datasheet ?image ?lifeperiod ?manufacturer ?price ?phenomena ?phenomenaLabel ?unit ?device ?devicesLabel
+                ORDER BY ?sensors ?iri ?irid ?phenomena ?device
+          `)
+    .execute()
+    .then(res => res.results.bindings)
+    .catch(function (error) {
+        console.log("Oh no, error!")
+      });
+}
+
+
+
 module.exports.getDevices = function () {
     return client
     .query(SPARQL`
@@ -108,15 +200,15 @@ module.exports.getDevices = function () {
 
 
 
-module.exports.updatePhenomenon = function (iri, phenomenon) {
+module.exports.updatePhenomenon = function (phenomenon) {
     console.log(phenomenon);
     return client
     .query(SPARQL`INSERT DATA {
-        ${{s: iri}} rdf:type s:phenomenon;
-                    rdfs:label  ${{value: name.label, lang: name.lang}};
-                    rdfs:comment  ${{value: description.comment, lang: description.lang}};
-                    s:describedBy ${{uo: unit}};
-                    `+ (domain ?`s:hasDomain ${{s: domain}}.`:``) + `
+        ${{s: phenomenon.name.label}} rdf:type s:phenomenon;
+                    rdfs:label  ${{value: phenomenon.name.label, lang: phenomenon.name.lang}};
+                    rdfs:comment  ${{value: phenomenon.description.comment, lang: phenomenon.description.lang}};
+                    s:describedBy ${{uo: phenomenon.unit}}.
+                    `+ (phenomenon.domain ?`${{s: phenomenon.name.label}} s:hasDomain ${{s: domain}}.`:``) + `
             }`)
     .execute()
     .then(Promise.resolve(console.log("everthing ok")))

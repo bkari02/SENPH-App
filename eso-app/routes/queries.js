@@ -14,19 +14,26 @@ router.get('/phenomena',function(req,res){
   });
 
 router.get('/phenomenon/:iri',function(req,res){
+  console.log(req);
     QueriesController.getPhenomenon(req.params.iri)
     .then(data => res.json(data))
 });
 
-router.post('/phenomenon/update/:iri',function(req,res){
+router.post('/phenomenon/update/',function(req,res){
   console.dir(req.body);
-  QueriesController.updatePhenomenon(req.params.iri, req.body)
+  QueriesController.updatePhenomenon(req.body)
   .then(res.end("END"))
 });
 
 
 router.get('/sensors',function(req,res){
     QueriesController.getSensors()
+    .then(data => res.json(data))
+});
+
+router.get('/sensor/:iri',function(req,res){
+  console.log(req);
+    QueriesController.getSensor(req.params.iri)
     .then(data => res.json(data))
 });
 
