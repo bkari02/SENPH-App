@@ -1,17 +1,17 @@
 const SparqlClient = require('sparql-client-2');
 const SPARQL = SparqlClient.SPARQL;
-const endpoint = 'http://localhost:3030/senphfoafuo/sparql';
-const updatepoint = 'http://localhost:3030/senphfoafuo/update';
-const unitpoint = 'http://localhost:3030/uo/sparql';
+const endpoint = 'http://localhost:3030/senph/sparql';
+const updatepoint = 'http://localhost:3030/senph/update';
+// const unitpoint = 'http://localhost:3030/uo/sparql';
 
 
 
-const unitsClient = new SparqlClient(unitpoint)
-    .register({   owl: 'http://www.w3.org/2002/07/owl#',
-                rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
-                uo: 'http://purl.obolibrary.org/obo/',
-                rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-    })  
+// const unitsClient = new SparqlClient(unitpoint)
+//     .register({   owl: 'http://www.w3.org/2002/07/owl#',
+//                 rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
+//                 uo: 'http://purl.obolibrary.org/obo/',
+//                 rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+//     })  
 
 
 const client = new SparqlClient(endpoint, {
