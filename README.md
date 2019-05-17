@@ -1,4 +1,6 @@
-![](https://github.com/bkari02/SENPH-App/blob/master/SOWA_Logo.png?raw=true)
+# Welcome to the Senph Ontology Web Application (SOWA)
+
+<img src="senph-frontend/src/assets/img/owl_logo.png" width="20%">
 
 
 Installation Instructions
