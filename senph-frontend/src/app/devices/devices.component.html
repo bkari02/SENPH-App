@@ -1,6 +1,19 @@
-<h1>Device List</h1>
-<ul>
-  <li *ngFor='let device of devicesArray'>
-    {{device.label[0].value}}
-  </li>
-</ul>
+<mat-toolbar style="background-color: #0000006b;" class="example-toolbar">
+    <h1 class="example-app-name capitalize" style="color: #ffd63e;">Devices List</h1>
+</mat-toolbar>
+<h1 class="headline-border"></h1>
+<div class="content">
+
+<input matInput #myInput placeholder="Type to filter devices..." [(ngModel)]="device" (input)="filterItem(myInput.value)">
+
+<ul class="heroes">
+    <li>
+    <span class="badge">No.</span> <span class="badge t">Label</span> URI </li>
+    <li *ngFor="let device of devicesArrayFiltered;let i = index"
+      [class.selected]="device === selectedDevice"
+      (click)="onSelect(device)" [hidden]='device.device.type != "uri"' [routerLink]="createRoute(i)" >
+      <span class="badge">{{i+1}}</span> <span class="badge t" >{{device.label[0]?.value}}</span> {{device.device.value}}
+    </li>
+  </ul>
+
+</div>

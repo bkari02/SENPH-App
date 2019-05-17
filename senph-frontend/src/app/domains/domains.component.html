@@ -1,3 +1,19 @@
-<p>
-  domains works!
-</p>
+<mat-toolbar style="background-color: #0000006b;" class="example-toolbar">
+    <h1 class="example-app-name capitalize" style="color: #ffd63e;">Domain List</h1>
+</mat-toolbar>
+<h1 class="headline-border"></h1>
+<div class="content">
+
+<input matInput #myInput placeholder="Type to filter phenomena..." [(ngModel)]="domain" (input)="filterItem(myInput.value)">
+
+<ul class="heroes">
+    <li>
+    <span class="badge">No.</span> <span class="badge t">Label</span> URI </li>
+    <li *ngFor="let domain of domainsArrayFiltered;let i = index"
+      [class.selected]="domain === selectedDomain"
+      (click)="onSelect(domain)" [hidden]='domain.domain.type != "uri"' [routerLink]="createRoute(i)" >
+      <span class="badge">{{i+1}}</span> <span class="badge t" >{{domain.label[0]?.value}}</span> {{domain.domain.value}}
+    </li>
+  </ul>
+
+</div>

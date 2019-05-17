@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DomainsFormComponent } from './domains-form.component';
+import { FormPhenomenonComponent } from './form-phenomenon.component';
 
-describe('DomainsFormComponent', () => {
-  let component: DomainsFormComponent;
-  let fixture: ComponentFixture<DomainsFormComponent>;
+describe('FormPhenomenonComponent', () => {
+  let component: FormPhenomenonComponent;
+  let fixture: ComponentFixture<FormPhenomenonComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DomainsFormComponent ]
+      declarations: [ FormPhenomenonComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DomainsFormComponent);
+    fixture = TestBed.createComponent(FormPhenomenonComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

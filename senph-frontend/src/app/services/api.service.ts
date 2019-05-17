@@ -1,5 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { catchError } from 'rxjs/operators';
+
+
+const httpOptions = {
+  headers: new HttpHeaders({
+    'Content-Type':  'application/json'
+    })
+};
 
 @Injectable({
   providedIn: 'root'
@@ -18,8 +26,12 @@ export class ApiService {
     return this.http.get(this.APIURL + '/queries/phenomenon/' + iri);
    }
 
+  getPhenomenonIRI(iri) {
+    return this.http.get(this.APIURL + '/queries/phenomenonIRI/' + iri);
+   }
+
   updatePhenomenon(phenomenon){
-    return this.http.post(this.APIURL + '/queries/phenomenon/update' , phenomenon);
+    return this.http.post(this.APIURL + '/queries/phenomenon/update' , phenomenon, httpOptions);
   }
 
 
@@ -30,6 +42,10 @@ export class ApiService {
 
   getSensor(iri) {
     return this.http.get(this.APIURL + '/queries/sensor/' + iri);
+   }
+
+   getSensorIRI(iri) {
+    return this.http.get(this.APIURL + '/queries/sensorIRI/' + iri);
    }
 
   updateSensor(sensor){
