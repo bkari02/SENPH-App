@@ -9,15 +9,24 @@ export class HeroBannerComponent implements OnInit {
 
   @Input() title: string;
   @Input()  subtitle: string;
-  @Input()  button: boolean;
+  @Input()  button: string;
+  @Input()  button2: string;
   @Output() myEvent = new EventEmitter();
+  @Output() myEvent2 = new EventEmitter();
+  @Input() valid: string;
 
   
 
   constructor() { }
+
   buttonClick(){
     this.myEvent.emit(null)
   }
+
+  buttonClick2(){
+    this.myEvent2.emit(null)
+  }
+
   ngOnInit() {
   }
 

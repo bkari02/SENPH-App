@@ -1,119 +1,219 @@
-<!-- <mat-toolbar style="background-color: #000000c6;" class="example-toolbar">
-  <h4 class="example-app-name capitalize" style="color: #ffd63e;">{{phenomenon?.labels[0].label.value}}</h4>
-  <span class="example-fill-remaining-space"></span>
-  <button class="btn btn-primary" (click)="editButtonClick(uri)">Edit</button>
-</mat-toolbar> -->
-<senph-hero-banner [title]="phenomenon?.labels[0].label.value"  (myEvent)="editButtonClick(uri)" [button]="true"> </senph-hero-banner>
+<div *ngIf="phenomenon != undefined">
 
+  <senph-hero-banner [title]="prefLabel?.value" [valid]="phenomenon.validation?.value" [subtitle]="phenomenon.iri.value" (myEvent)="button1(uri)"
+    [button]="historic.button1" (myEvent2)="getHistory(uri)" [button2]="historic.button2">> </senph-hero-banner>
 
-<div class="content" *ngIf="phenomenon">
-  <div class="article">
-    <p class="siteSub">From SOWA, the free SensorWiki</p>
-    <p class="roleNote">This article is about <b>{{phenomenon?.labels[0].label.value}}</b>. For equivalent phenomena,
-      see <a
-        href="/phenomenon/sameAs/{{phenomenon?.labels[0].label.value}}">{{phenomenon?.labels[0].label.value}}-Equivalents.</a>
-    </p>
-    <!-- 
-    <div class="articleRight">
-      <div class="articleRightInner">
-        <img src="{{image?.value[0]?.iri}}" alt="{{phenomenon?.labels[0].label.value}}" />
+<section *ngIf="phenomenonHistory">
+  <div class="list is-hoverable">
+    <div class="list-item">
+      <div class="columns is-mobile is-multiline is-centered">
+        <div class="column is-3">
+          Index
+        </div>
+        <div class="column is-9">
+          <strong>
+            URI
+          </strong>
+        </div>
       </div>
-      The {{phenomenon?.labels[0].label.value}}
-    </div> -->
-    <p>{{phenomenon.description.value}}</p>
-    <div class="contentsPanel">
-      <div class="contentsHeader">Contents</div>
-      <ul>
-        <li><span>1</span><a href="/phenomenon/{{uri}}#uri">URI</a> </li>
-        <li><span>2</span><a href="/phenomenon/{{uri}}#labels">Labels</a> </li>
-        <li><span>3</span><a href="/phenomenon/{{uri}}#units">Units</a></li>
-        <li><span>4</span><a href="/phenomenon/{{uri}}#sensors">Sensors</a></li>
-        <li><span>5</span><a href="/phenomenon/{{uri}}#domains">Domains</a></li>
-      </ul>
     </div>
-    <h2 id="uri">URI</h2>
-    <p>The URI of the {{phenomenon?.labels[0].label.value}} is: </p>
-    <b>{{phenomenon.iri.value}}</b>
-
-    <h2 id="labels">Labels</h2>
-    <p>These are the available labels for the {{phenomenon?.labels[0].label.value}} Phenomenon:</p>
-    <ul>
-      <li *ngFor="let name of phenomenon.labels">
-        <b>{{name.label.value}}</b>
-      </li>
-    </ul>
-
-    <h2 id="units">Units</h2>
-    <p>The units of measurement for {{phenomenon?.labels[0].label.value}} are:</p>
-    <table>
-      <thead>
-        <th class="mat-h-cell">Label</th>
-        <th class="mat-h-cell">Unit URI</th>
-      </thead>
-      <tbody>
-        <tr *ngFor="let unit of phenomenon.units">
-          <td class="mat-h-cell">
-            {{unit.unitLabel?.value}}
-          </td>
-          <td class="mat-h-cell">
-            <b><a href="https://bioportal.bioontology.org/ontologies/UO/?p=classes&conceptid={{unit.unit.value}}"
-                target="_blank">{{unit.unit.value}}</a></b>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- <h2 id="sensors">Sensors</h2>
-    <p>The following sensors can measure {{phenomenon?.labels[0].label.value}}:</p>
-    <table>
-        <thead>
-          <th class="mat-h-cell">Label</th>
-          <th class="mat-h-cell">Sensor URI</th>
-        </thead>
-        <tbody>
-          <tr *ngFor="let sensor of sensors">
-            <td class="mat-h-cell">
-              {{sensor.label}}
-            </td>
-            <td class="mat-h-cell">
-              <a href="/sensor/{{sensor.short}}">{{sensor.iri}}</a>
-            </td>
-          </tr>
-        </tbody>
-        </table> -->
-
-    <h2 id="domains">Domains</h2>
-    <p>{{phenomenon?.labels[0].label.value}} belongs to the following domains:</p>
-    <table>
-      <thead>
-        <th class="mat-h-cell">Label</th>
-        <th class="mat-h-cell">Domain URI</th>
-      </thead>
-      <tbody>
-        <tr *ngFor="let domain of phenomenon.domains">
-          <td class="mat-h-cell">
-            {{domain.domainLabel?.value}}
-          </td>
-          <td class="mat-h-cell">
-            <!-- TODO: Check if button works!! -->
-            <button class="btn btn-link" (click)="redirectDomain(domain.domain.value)">{{domain.domain.value}}</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="categories">
-      <a href="#">Minimum corrumpit </a> <a href="#">Regione suscipit </a> <a href="#">Has et partem </a>
+    <div class="list-item" *ngFor="let version of phenomenonHistory;let i = index"
+      [class.selected]="version === selectedVersion" (click)=redirectHistoricDetails(uri,version.phenomenon.value)>
+      <div class="columns is-mobile is-multiline is-centered">
+        <div class="column is-3">
+          {{i+1}}
+        </div>
+        <div class="column is-9">
+          {{version.phenomenon.value}}
+        </div>
+      </div>
     </div>
-
   </div>
-  <div class="pagefooter">
-    This page was last edited on 15.05.2019
-    <div class="footerlinks">
-      <a href="#">Privacy policy</a> <a href="#">About</a> <a href="#">Terms and conditions</a> <a href="#">Cookie
-        statement</a> <a href="#">Developers</a>
+</section>
+
+
+  <section class="section" *ngIf="!phenomenonHistory">
+    <div class="container is-fluid">
+      <div class="tile is-ancestor">
+        <div class="tile is-vertical">
+          <div class="tile">
+            <!-- <senph-uri-tile [parent]="phenomenon"></senph-uri-tile> -->
+            <div class="tile is-parent is-vertical">
+              <article class="tile is-child notification is-warning">
+                <p class="title">URI</p>
+                <div class="content">
+                  <strong>
+                    {{phenomenon.iri.value}}
+                  </strong>
+                </div>
+              </article>
+              <article class="tile is-child notification is-warning">
+                <p class="title">Labels</p>
+                <p class="subtitle">These are the available labels in various languages for the
+                  {{prefLabel?.value}}:</p>
+                <div class="columns is-mobile is-multiline is-centered">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      <strong>
+
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>
+                        Label
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>
+                        Language
+                      </strong>
+                    </p>
+                  </div>
+                </div>
+                <div class="columns is-mobile is-multiline is-centered"
+                  *ngFor="let label of phenomenon.labels;let i = index">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      {{i+1}}
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      {{label.value}}
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      {{search(label, languageArray)}}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <div class="tile is-parent">
+              <article class="tile is-child notification is-warning">
+                <p class="title">Description</p>
+                <div class="content">
+                  <strong>
+                    {{phenomenon.description.value}}
+                  </strong>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <!-- Domains -->
+          <div class="tile is-parent">
+            <article class="tile is-child notification is-danger">
+              <p class="title">Domains</p>
+              <p class="subtitle">
+                {{prefLabel?.value}} is part of the following domains:
+              </p>
+              <div class="content">
+                <div class="columns is-mobile is-multiline is-centered">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      <strong>
+
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>Label</strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>URI</strong>
+                    </p>
+                  </div>
+                </div>
+                <div class="columns is-mobile is-multiline is-centered"
+                  *ngFor="let domain of phenomenon.domains;let i = index">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      <strong>
+                        {{i+1}}
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      {{domain.domainLabel?.value}}
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <a (click)="redirectDomain(domain.domain.value, '/phenomenon/')">
+                        {{domain.domain.value}}
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <!-- Units -->
+          <div class="tile is-parent">
+            <article class="tile is-child notification is-danger">
+              <p class="title">Units</p>
+              <p class="subtitle">
+                These are the units that can be describe {{prefLabel?.value}}
+              </p>
+              <div class="content">
+                <div class="columns is-mobile is-multiline is-centered">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      <strong>
+
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>Label</strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>URI</strong>
+                    </p>
+                  </div>
+                </div>
+                <div class="columns is-mobile is-multiline is-centered"
+                  *ngFor="let unit of phenomenon.units;let i = index">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      <strong>
+                        {{i+1}}
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary" *ngIf="unitsArray">
+                      {{searchPheno(unit.unit.value, "y", unitsArray , "label")}}
+                      <!-- {{unit.unitLabel.value}} -->
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <a (click)="redirectDomain(unit.unit.value, '/phenomenon/')">
+                        {{unit.unit.value}}
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
     </div>
-
-
-  </div>
+  </section>
 </div>

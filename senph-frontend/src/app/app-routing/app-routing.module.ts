@@ -13,9 +13,6 @@ import { DevicesDetailComponent } from '../entities/device/devices-detail/device
 import { DevicesEditComponent } from '../entities/device/devices-edit/devices-edit.component';
 import { DomainsComponent } from '../entities/domain/domains/domains.component';
 import { DomainsDetailComponent } from '../entities/domain/domains-detail/domains-detail.component';
-import { FormTemplateComponent } from '../old-stuff/form-template/form-template.component';
-import { FormPhenomenonComponent } from '../old-stuff/form-phenomenon/form-phenomenon.component';
-import { FormSensorComponent } from '../old-stuff/form-sensor/form-sensor.component';
 import { DomainEditComponent } from '../entities/domain/domain-edit/domain-edit.component';
 import { PhenomenaEditComponent } from '../entities/phenomenon/phenomena-edit/phenomena-edit.component';
 import { SensorEditComponent } from '../entities/sensor/sensor-edit/sensor-edit.component';
@@ -45,7 +42,8 @@ const routes: Routes = [
               {
                 path: '',
                 children: [
-                  { path: ':iri', component: PhenomenaDetailComponent }
+                  { path: ':iri', component: PhenomenaDetailComponent },
+                  { path: ':uri/historic/:iri', component:PhenomenaDetailComponent }                  
                 ]
               }
             ]
@@ -81,6 +79,18 @@ const routes: Routes = [
         children: [
           {
             path: 'detail',
+            children: [
+              {
+                path: '',
+                children: [
+                  { path: ':iri', component: SensorsDetailComponent },
+                  { path: ':uri/historic/:iri', component: SensorsDetailComponent },                  
+                ]
+              }
+            ]
+          },
+          {
+            path: 'detail-historic',
             children: [
               {
                 path: '',
@@ -125,7 +135,8 @@ const routes: Routes = [
               {
                 path: '',
                 children: [
-                  { path: ':iri', component: DevicesDetailComponent }
+                  { path: ':iri', component: DevicesDetailComponent },
+                  { path: ':uri/historic/:iri', component:DevicesDetailComponent }                  
                 ]
               }
             ]
@@ -165,7 +176,9 @@ const routes: Routes = [
               {
                 path: '',
                 children: [
-                  { path: ':iri', component: DomainsDetailComponent }
+                  { path: ':iri', component: DomainsDetailComponent },
+                  { path: ':uri/historic/:iri', component:DomainsDetailComponent }                  
+
                 ]
               }
             ]

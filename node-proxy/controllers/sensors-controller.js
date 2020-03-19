@@ -2,6 +2,8 @@ const SparqlClient = require('sparql-client-2');
 const SPARQL = SparqlClient.SPARQL;
 const endpoint = 'http://localhost:3030/senph/sparql';
 const updatepoint = 'http://localhost:3030/senph/update';
+const history_endpoint = 'http://localhost:3030/senph-history/sparql';
+const history_updatepoint = 'http://localhost:3030/senph-history/update';
 // const unitpoint = 'http://localhost:3030/uo/sparql';
 
 
@@ -27,6 +29,19 @@ const client = new SparqlClient(endpoint, {
 
   })
 
+const historyClient = new SparqlClient(history_endpoint, {
+  updateEndpoint: history_updatepoint
+})
+  .register({
+    owl: 'http://www.w3.org/2002/07/owl#',
+    rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
+    s: 'http://www.opensensemap.org/SENPH#',
+    uo: 'http://purl.obolibrary.org/obo/',
+    rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+    xsd: 'http://www.w3.org/2001/XMLSchema#'
+
+  })
+
 
 /* ---------- All sensor funtions: -----------------*/
 
@@ -34,11 +49,14 @@ const client = new SparqlClient(endpoint, {
 module.exports.getSensors = function () {
   return client
     .query(SPARQL`
-                     SELECT ?label ?sensor
+                     SELECT ?sensorLabel ?sensor ?validation
                      WHERE {
                        ?sensor rdf:type s:sensor.
-                       OPTIONAL {?sensor rdfs:label ?label.}
-                     }`)
+                       ?sensor rdfs:label ?sensorLabel.
+                       OPTIONAL{
+                       ?sensor s:isValid ?validation.
+                       }
+                    }`)
     .execute({ format: { resource: 'sensor' } })
     .then(res => res.results.bindings)
     .catch(function (error) {
@@ -47,77 +65,112 @@ module.exports.getSensors = function () {
 }
 
 
-//get a single sensor identified by its iri @returns the sensor's labels, descriptions, datasheet, image, lifeperiod, manufacturer, price, phenomena it can measueres and accuracy values, devices it is part of
-module.exports.getSensor = function (iri) {
-  return client
-    .query(SPARQL`
-    Select Distinct ?iri  ?labels ?description  ?manufacturer ?price ?datasheet  ?lifeperiod ?image ?devices ?selement
-                     WHERE {   
-  						          {	
-                            ${{ s: iri }}  rdfs:label ?name.
-                            ?iri ?rdf ?name
-                        }
-                        UNION 
-                        {   
-                          ${{ s: iri }}  rdfs:label ?labels.
-                        }
-                        UNION 
-                        {   
-                            ${{ s: iri }} rdfs:comment ?description.
-                        }
-                        UNION
-                        {
-                            ${{ s: iri }} s:hasElement ?selement.
-                        }
-                        UNION
-                        {
-                            ${{ s: iri }} s:isSensorOf ?devices.
-                        }  
-                        UNION
-                        {
-                            ${{ s: iri }} s:manufacturer ?manufacturer.
-                        }
-                        UNION
-                        {
-                            ${{ s: iri }} s:priceInEuro ?price.
-                        }
-                        UNION
-                        {	
-                            ${{ s: iri }} s:dataSheet ?datasheet.
-                        }
-                        UNION
-                        {
-                            ${{ s: iri }} s:lifePeriod ?lifeperiod.
-                        } 
-                        UNION
-                        {
-                            ${{ s: iri }} s:image ?image.
-                        } 
-                     }
-                Group BY ?iri ?labels ?description ?datasheet ?image ?lifeperiod ?manufacturer ?price ?devices ?selement
-                ORDER BY ?iri ?phenomena ?devices ?selement
-          `)
+//get history of a sensors
+module.exports.getSensorHistory = function (iri) {
+  var senphurl = 'http://www.opensensemap.org/SENPH#';
+  var bindingsText = `
+  SELECT ?sensor
+                     WHERE {
+                       ?sensor rdf:type s:sensor.
+                       FILTER(regex(str(?sensor), ?iri, "i" ))
+                     }`;
+  return historyClient
+    .query(bindingsText)
+    .bind('iri', senphurl + iri)
     .execute()
-    .then(res => res.results.bindings)
+    .then(res => {
+      console.log(res.results.bindings)
+      return res.results.bindings
+    })
     .catch(function (error) {
       console.log("Oh no, error!")
     });
 }
+
+
+
+
+//get a single sensor identified by its iri @returns the sensor's labels, descriptions, datasheet, image, lifeperiod, manufacturer, price, phenomena it can measueres and accuracy values, devices it is part of
+// module.exports.getSensorIRI = function (iri) {
+//   console.log(iri);
+//   return client
+//     .query(SPARQL`
+//     Select Distinct ?iri  ?label ?description  ?manufacturer ?price ?datasheet  ?lifeperiod ?image ?device ?deviceLabel ?sensorElement ?phenomenon  ?unit ?accVal
+//                      WHERE {   
+//   						          {	
+//                             ${{ s: iri }}  rdfs:label ?name.
+//                             ?iri ?rdf ?name
+//                         }
+//                         UNION 
+//                         {   
+//                           ${{ s: iri }}  rdfs:label ?label.
+//                         }
+//                         UNION 
+//                         {   
+//                             ${{ s: iri }} rdfs:comment ?description.
+//                         }
+//                         UNION
+//                         {
+//                             ${{ s: iri }} s:hasElement ?sensorElement.
+//                               ?sensorElement s:canMeasure ?phenomenon.
+//                               ?sensorElement s:hasAccuracyUnit ?unit.
+//                               ?sensorElement s:accuracyValue ?accVal.
+//                         }
+//                         UNION
+//                         {
+//                             ${{ s: iri }} s:isSensorOf ?device.
+//                             OPTIONAL
+//                             { ?device rdfs:label ?deviceLabel.}
+//                         }  
+//                         UNION
+//                         {
+//                             ${{ s: iri }} s:manufacturer ?manufacturer.
+//                         }
+//                         UNION
+//                         {
+//                             ${{ s: iri }} s:priceInEuro ?price.
+//                         }
+//                         UNION
+//                         {	
+//                             ${{ s: iri }} s:dataSheet ?datasheet.
+//                         }
+//                         UNION
+//                         {
+//                             ${{ s: iri }} s:lifePeriod ?lifeperiod.
+//                         } 
+//                         UNION
+//                         {
+//                             ${{ s: iri }} s:image ?image.
+//                         } 
+//                      }
+//                 Group BY ?iri ?label ?description ?datasheet ?image ?lifeperiod ?manufacturer ?price ?device ?deviceLabel ?sensorElement ?phenomenon  ?unit ?accVal
+//                 ORDER BY ?iri ?phenomenon ?device ?sensorElement
+//           `)
+//     .execute()
+//     .then(res => {
+//       console.log(res.results.bindings)
+//       return res.results.bindings
+//     })
+//     .catch(function (error) {
+//       console.dir(arguments, { depth: null })
+//       console.log("Oh no, error!")
+//     });
+// }
 
 //get a single sensorelment identified by its iri @returns phenomena it can measueres and accuracy values
 module.exports.getSensorElement = function (iri) {
   iri = iri.slice(34);
   return client
     .query(SPARQL`
-    Select Distinct ?phenomena ?unit ?accVal
+    Select Distinct ?sensorElement ?phenomenon ?unit ?accVal
                      WHERE {   
-                            ${{ s: iri }} s:canMeasure ?phenomena.
-                            ?sensorElement s:canMeasure ?phenomena.
+                            ${{ s: iri }} s:canMeasure ?phenomenon.
+                            ?sensorElement s:canMeasure ?phenomenon.
                             ?sensorElement s:hasAccuracyUnit ?unit.
                             ?sensorElement s:accuracyValue ?accVal.                         
                      }
-                Group BY ?phenomena ?unit ?accVal
-                ORDER BY ?phenomena
+                Group BY ?sensorElement ?phenomenon ?unit ?accVal
+                ORDER BY ?phenomenon
           `)
     .execute()
     .then(res => res.results.bindings)
@@ -131,199 +184,386 @@ module.exports.getSensorElement = function (iri) {
 
 
 //get a single sensor identified by its iri @returns the sensor's labels, descriptions, datasheet, image, lifeperiod, manufacturer, price, phenomena it can measueres and accuracy values, devices it is part of
-module.exports.getSensorIRI = function (iri) {
-  return client
-    .query(SPARQL`
-  Select Distinct ?iri ?label ?description ?datasheet ?image ?lifeperiod ?manufacturer ?price ?phenomena ?unit ?device
-                   WHERE {   
-            {	
-                          ${{ s: iri }}  rdfs:label ?label.
-                        ?iri ?rdf ?label
-                      }
-                      UNION 
-                      {   
-                          ${{ s: iri }} rdfs:comment ?description.
-                      }
-                      UNION
-                      {	
-                          ${{ s: iri }} s:dataSheet ?datasheet.
-                      }
-                      UNION
-                      {
-                          ${{ s: iri }} s:image ?image.
-                      } 
-                      UNION
-                      {
-                          ${{ s: iri }} s:lifePeriod ?lifeperiod.
-                      } 
-                      UNION
-                      {
-                          ${{ s: iri }} s:manufacturer ?manufacturer.
-                      }
-                      UNION
-                      {
-                          ${{ s: iri }} s:priceInEuro ?price.
-                      }
-                      UNION
-                      {
-                          ${{ s: iri }} s:hasElement ?selement.
-                          ?selement   s:canMeasure ?phenomena.
-                          OPTIONAL {?phenomena rdfs:label ?phenomenaLabel.}
-                          OPTIONAL { ?selement s:hasAccuracyUnit ?unit.}
-                      }
-                      UNION
-                      {
-                          ${{ s: iri }} s:isSensorOf ?devices.
-                      }  
-
-                   }
-              Group BY ?iri ?label ?description ?datasheet ?image ?lifeperiod ?manufacturer ?price ?phenomena ?unit ?device 
-              ORDER BY ?iri ?phenomena ?device
-        `)
-    .execute()
-    .then(res => res.results.bindings)
-    .catch(function (error) {
-      console.log("Oh no, error!")
-    });
-}
-
-//update/add a new sensor @inputs required: label +language, description + language, a phenomenon that is meaured with according accuracy value; optional: manufacturer, data sheet, price in Euro, life period (currently not available because of datatype issue) and an image  
-module.exports.updateSensor = function (sensor) {
+module.exports.getSensor = function (iri) {
   var senphurl = 'http://www.opensensemap.org/SENPH#';
-  var sElem = sensor.sensorElement[0].phenomenon + "_" + sensor.name.label;
-  if (sensor.image == undefined) { sensor.image = "" }
-  var bindingsText = 'INSERT DATA {' +
-    '?sensorname rdf:type     s:sensor.' +
-    '?sensorname rdfs:label   ?sensorlabel. ' +
-    '?sensorname rdfs:comment ?desc.' +
-    (sensor.manufacturer ? '?sensorname s:manufacturer ?manu.' : '') +
-    (sensor.dataSheet ? '?sensorname s:dataSheet    ?datasheet.' : '') +
-    (sensor.price ? '?sensorname s:priceInEuro  ?price.' : '') +
-    (sensor.lifePeriod ? '?sensorname s:lifePeriod   ?life.' : '') +
-    (sensor.image ? '?sensorname s:image        ?image.' : '') +
-    (sensor.device ? '?sensorname s:isSensorOf   ?device.' : '') +
-    '?sensorname s:hasElement       ?elem.' +
-    '?elem       s:canMeasure       ?phenomenon.' +
-    '?elem       s:hasAccuracyValue ?uoa.' +
-    '}';
+
+  var bindingsText = `Select Distinct ?label ?description  ?manufacturer ?price ?datasheet  ?lifeperiod ?image ?device ?deviceLabel ?sensorElement ?phenomenon  ?unit ?accVal ?validation
+  WHERE {   
+     {   
+       ?iri  rdfs:label ?label.
+     }
+     UNION 
+     {   
+         ?iri rdfs:comment ?description.
+     }
+     UNION
+     {
+         ?iri s:hasElement ?sensorElement.
+           ?sensorElement s:canMeasure ?phenomenon.
+           ?sensorElement s:hasAccuracyUnit ?unit.
+           ?sensorElement s:accuracyValue ?accVal.
+     }
+     UNION
+     {
+         ?iri s:isSensorOf ?device.
+         OPTIONAL
+         { ?device rdfs:label ?deviceLabel.}
+     }  
+     UNION
+     {
+         ?iri s:manufacturer ?manufacturer.
+     }
+     UNION
+     {
+         ?iri s:priceInEuro ?price.
+     }
+     UNION
+     {	
+         ?iri s:dataSheet ?datasheet.
+     }
+     UNION
+     {
+         ?iri s:lifePeriod ?lifeperiod.
+     } 
+     UNION
+     {
+         ?iri s:image ?image.
+     } 
+     UNION
+     {
+         ?iri s:isValid ?validation.
+     } 
+  }
+Group BY ?label ?description ?datasheet ?image ?lifeperiod ?manufacturer ?price ?device ?deviceLabel ?sensorElement ?phenomenon  ?unit ?accVal ?validation
+ORDER BY ?phenomenon ?device ?sensorElement`;
   return client
     .query(bindingsText)
-    .bind({
-      sensorname: { value: senphurl + sensor.uri, type: 'uri' },
-      sensorlabel: { value: sensor.name.label, lang: sensor.name.lang },
-      desc: { value: sensor.description.comment, lang: sensor.description.lang },
-      manu: { value: sensor.manufacturer, type: 'string' },
-      datasheet: { value: sensor.dataSheet, type: 'string' },
-      price: { value: sensor.price, type: 'float' },
-      life: { value: sensor.lifePeriod, type: 'string' },
-      image: { value: sensor.image, type: 'string' },
-      device: { value: senphurl + sensor.device, type: 'uri' },
-      elem: { value: senphurl + sElem, type: 'uri' },
-      phenomenon: { value: senphurl + sensor.sensorElement[0].phenomenon, type: 'uri' },
-      uoa: { value: sensor.sensorElement[0].uoa, type: 'float' }
-    })
+    .bind('iri', { s: iri })
     .execute()
-    .then(Promise.resolve(console.log("everthing ok")))
+    .then(res => {
+      res.results.bindings.push({
+        'iri':
+        {
+          type: 'uri',
+          value: senphurl + iri
+        }
+      })
+      console.log(res.results.bindings)
+      return res.results.bindings
+    })
     .catch(function (error) {
-      console.log(error.httpStatus);
-      console.log(error);
+      console.dir(arguments, { depth: null })
+      console.log("Oh no, error!")
+      console.log(error)
     });
 }
+
+
+//get a single historic sensor entry identified by its iri @returns the sensor's labels, descriptions, datasheet, image, lifeperiod, manufacturer, price, phenomena it can measueres and accuracy values, devices it is part of
+module.exports.getHistoricSensor = function (iri) {
+  var senphurl = 'http://www.opensensemap.org/SENPH#';
+
+  var bindingsText = `Select Distinct ?label ?description  ?manufacturer ?price ?datasheet  ?lifeperiod ?image ?device ?deviceLabel ?sensorElement ?phenomenon  ?unit ?accVal ?validation
+  WHERE {   
+     {   
+       ?iri  rdfs:label ?label.
+     }
+     UNION 
+     {   
+         ?iri rdfs:comment ?description.
+     }
+     UNION
+     {
+         ?iri s:hasElement ?sensorElement.
+           ?sensorElement s:canMeasure ?phenomenon.
+           ?sensorElement s:hasAccuracyUnit ?unit.
+           ?sensorElement s:accuracyValue ?accVal.
+     }
+     UNION
+     {
+         ?iri s:isSensorOf ?device.
+         ?device rdfs:label ?deviceLabel.
+     }  
+     UNION
+     {
+         ?iri s:manufacturer ?manufacturer.
+     }
+     UNION
+     {
+         ?iri s:priceInEuro ?price.
+     }
+     UNION
+     {	
+         ?iri s:dataSheet ?datasheet.
+     }
+     UNION
+     {
+         ?iri s:lifePeriod ?lifeperiod.
+     } 
+     UNION
+     {
+         ?iri s:image ?image.
+     }
+     UNION
+     {
+         ?iri s:isValid ?validation.
+     } 
+
+  }
+Group BY ?label ?description ?datasheet ?image ?lifeperiod ?manufacturer ?price ?device ?deviceLabel ?sensorElement ?phenomenon  ?unit ?accVal ?validation
+ORDER BY ?phenomenon ?device ?sensorElement`;
+  return historyClient
+    .query(bindingsText)
+    .bind('iri', { s: iri })
+    .execute()
+    .then(res => {
+      res.results.bindings.push({
+        'iri':
+        {
+          type: 'uri',
+          value: senphurl + iri
+        }
+      })
+      console.log(res.results.bindings)
+      return res.results.bindings
+    })
+    .catch(function (error) {
+      console.dir(arguments, { depth: null })
+      console.log("Oh no, error!")
+      console.log(error)
+    });
+}
+
+
+
+//update/add a new sensor @inputs required: label +language, description + language, a phenomenon that is meaured with according accuracy value; optional: manufacturer, data sheet, price in Euro, life period (currently not available because of datatype issue) and an image  
+// module.exports.updateSensor = function (sensor) {
+//   var senphurl = 'http://www.opensensemap.org/SENPH#';
+//   var sElem = sensor.sensorElement[0].phenomenon + "_" + sensor.name.label;
+//   if (sensor.image == undefined) { sensor.image = "" }
+//   var bindingsText = 'INSERT DATA {' +
+//     '?sensorname rdf:type     s:sensor.' +
+//     '?sensorname rdfs:label   ?sensorlabel. ' +
+//     '?sensorname rdfs:comment ?desc.' +
+//     (sensor.manufacturer ? '?sensorname s:manufacturer ?manu.' : '') +
+//     (sensor.dataSheet ? '?sensorname s:dataSheet    ?datasheet.' : '') +
+//     (sensor.price ? '?sensorname s:priceInEuro  ?price.' : '') +
+//     (sensor.lifePeriod ? '?sensorname s:lifePeriod   ?life.' : '') +
+//     (sensor.image ? '?sensorname s:image        ?image.' : '') +
+//     (sensor.device ? '?sensorname s:isSensorOf   ?device.' : '') +
+//     '?sensorname s:hasElement       ?elem.' +
+//     '?elem       s:canMeasure       ?phenomenon.' +
+//     '?elem       s:hasAccuracyValue ?uoa.' +
+//     '}';
+//   return client
+//     .query(bindingsText)
+//     .bind({
+//       sensorname: { value: senphurl + sensor.uri, type: 'uri' },
+//       sensorlabel: { value: sensor.name.label, lang: sensor.name.lang },
+//       desc: { value: sensor.description.comment, lang: sensor.description.lang },
+//       manu: { value: sensor.manufacturer, type: 'string' },
+//       datasheet: { value: sensor.dataSheet, type: 'string' },
+//       price: { value: sensor.price, type: 'float' },
+//       life: { value: sensor.lifePeriod, type: 'string' },
+//       image: { value: sensor.image, type: 'string' },
+//       device: { value: senphurl + sensor.device, type: 'uri' },
+//       elem: { value: senphurl + sElem, type: 'uri' },
+//       phenomenon: { value: senphurl + sensor.sensorElement[0].phenomenon, type: 'uri' },
+//       uoa: { value: sensor.sensorElement[0].uoa, type: 'float' }
+//     })
+//     .execute()
+//     .then(Promise.resolve(console.log("everthing ok")))
+//     .catch(function (error) {
+//       console.log(error.httpStatus);
+//       console.log(error);
+//     });
+// }
 
 
 module.exports.editSensor = function (sensor) {
   var senphurl = 'http://www.opensensemap.org/SENPH#';
-  var sElements = '';
-  console.log(sensor);
-  sensor.sensorElements.forEach(element => {
+  sensor.sensorElement.forEach(element => {
     element['uri'] = "sensorElement_" + sensor.uri + "_" + element.phenomenonUri.slice(34);
   })
-  console.log(sensor);
+
+  // DELETE {...} INSERT{...}
   var bindingsText = 'DELETE {?a ?b ?c}' +
     'INSERT {' +
-    '?sensorURI rdf:type     s:sensor. ' +
-    '?sensorURI rdfs:comment ?desc. ';
-  sensor.labels.forEach(element => {
-    var string = '?sensorURI rdfs:label ' + '"' + element.value + '"' + '@' + element.lang + '. ';
-    bindingsText = bindingsText.concat(string)
+    '?sensorURI rdf:type        s:sensor. ' +
+    '?sensorURI rdfs:comment    ?desc. ' +
+    '?sensorURI s:manufacturer  ?manu.' +
+    '?sensorURI s:dataSheet     ?datasheet.' +
+    '?sensorURI s:priceInEuro   ?price.' +
+    '?sensorURI s:lifePeriod    ?life.' +
+    '?sensorURI s:image         ?image.' +
+    '?sensorURI s:isValid       ?validation.';
+
+
+  sensor.label.forEach(element => {
+    bindingsText = bindingsText.concat(
+      '?sensorURI rdfs:label ' + JSON.stringify(element.value) + '@' + element.lang + '. '
+    );
   });
-  if (sensor.manufacturer != '') {
-    var string = '?sensorURI s:manufacturer ?manu.'
-    bindingsText = bindingsText.concat(string)
-  }
-  if (sensor.datasheet != '') {
-    var string = '?sensorURI s:dataSheet ?datasheet.'
-    bindingsText = bindingsText.concat(string)
-  }
-  if (sensor.price != '') {
-    var string = '?sensorURI s:priceInEuro ?price.'
-    bindingsText = bindingsText.concat(string)
-  }
-  if (sensor.lifeperiod != '') {
-    var string = '?sensorURI s:lifePeriod ?life.'
-    bindingsText = bindingsText.concat(string)
-  }
-  if (sensor.image != '') {
-    var string = '?sensorURI s:image ?image.'
-    bindingsText = bindingsText.concat(string)
-  }
-  sensor.devices.forEach(element => {
-    var string = '?sensorURI s:isSensorOf s:' + element.deviceUri.slice(34) + '. ';
-    bindingsText = bindingsText.concat(string)
+
+  sensor.device.forEach(element => {
+    bindingsText = bindingsText.concat(
+      '?sensorURI s:isSensorOf s:' + element.deviceUri.slice(34) + '. '
+    );
   });
-  sensor.sensorElements.forEach(element => {
+
+  sensor.sensorElement.forEach(element => {
     var string = '?sensorURI s:hasElement s:' + element.uri + '. ' +
       's:' + element.uri + ' s:canMeasure s:' + element.phenomenonUri.slice(34) + '. ' +
       's:' + element.uri + ' s:hasAccuracyUnit <' + element.unitOfAccuracy + '>. ' +
-      's:' + element.uri + ' s:accuracyValue ' + '"' + element.accuracyValue + '"' + '^^xsd:float.';
-    var filterString = ' ?a = s:' + element.uri + ' && (?b = s:canMeasure ||'+
-    ' ?b = s:hasAccuracyUnit ||'+
-    ' ?b = s:accuracyValue) ||'+
-    ' ?c = s:' + element.uri + ' && ?b = s:measuredBy ||';
-    sElements = filterString;
-      bindingsText = bindingsText.concat(string)
+      's:' + element.uri + ' s:accuracyValue ' + JSON.stringify(element.accuracyValue) + '^^xsd:float.';
+    bindingsText = bindingsText.concat(string)
   });
-  bindingsText = bindingsText.concat('} WHERE {?a ?b ?c. FILTER (',
-    ' (?a = ?sensorURI) && (?b = s:manufacturer ||',
-    ' ?b = s:dataSheet ||',
-    ' ?b = s:priceInEuro ||',
-    ' ?b = s:lifePeriod ||',
-    ' ?b = s:image ||',
-    ' ?b = s:hasElement ||',
-    ' ?b = s:isSensorOf ||',
-    ' ?b = rdfs:comment ||',
-    ' ?b = rdfs:label ||',
-    ' ?b = rdf:type) ||',
-    sElements,
-    // ' ?a = s:' + element.uri + ' && ?b = s:canMeasure ||',
-    // ' ?a = s:' + element.uri + ' && ?b = s:hasAccuracyUnit ||',
-    // ' ?a = s:' + element.uri + ' && ?b = s:accuracyValue ||',
 
-    // ' ?c = s:' + element.uri + ' && ?b = s:measuredBy ||',
-    ' ?c = ?sensorURI && (?b = s:hasSensor ||',
-    '  ?b = s:isElementOf))}');
-  // TODO: FINISH the bind part check whether all variables are fine!!!
+  // WHERE { ... FILTER{...}}
+  bindingsText = bindingsText.concat(
+    '} WHERE {?a ?b ?c. FILTER ('
+  );
+
+  sensor.sensorElement.forEach(element => {
+    bindingsText = bindingsText.concat(
+      '?a = s:' + element.uri + ' || ?c = s:' + element.uri + ' || '
+    );
+  });
+
+  bindingsText = bindingsText.concat(' ?a = ?sensorURI || ?c = ?sensorURI )}');
+
   // TODO: Add dynamic description language tag!
+  // LOG and EXECTUE UPDATE 
   console.log(bindingsText)
   return client
     .query(bindingsText)
     .bind({
       sensorURI: { value: senphurl + sensor.uri, type: 'uri' },
       desc: { value: sensor.description, lang: "en" },
-      manu: { value: sensor.manufacturer, type: 'string' },
-      datasheet: { value: sensor.datasheet, type: 'string' },
-      price: { value: sensor.price, type: 'float' },
-      life: { value: sensor.lifeperiod, type: 'string' },
-      image: { value: sensor.image, type: 'string' }
+      manu: sensor.manufacturer,
+      datasheet: { value: sensor.datasheet, type: 'uri' },
+      price: { value: sensor.price, type: 'decimal' },
+      life: { value: sensor.lifeperiod, type: 'integer' },
+      image: { value: sensor.image, type: 'uri' },
+      validation: { value: sensor.validation, type: 'boolean' }
     })
-    .execute()
-    .then(Promise.resolve(console.log("everthing ok")))
-    .catch(function (error) {
-      console.log(error.httpStatus);
-      console.log(error);
-    });
+    .execute();
 }
 
+module.exports.createHistorySensor = function (sensor) {
+  sensor['dateTime'] = Date.now();
+  console.log(sensor);
+  var senphurl = 'http://www.opensensemap.org/SENPH#';
+  sensor.sensorElement.forEach(element => {
+    element['uri'] = "sensorElement_" + sensor.uri + "_" + element.phenomenonUri.slice(34) + '_' + sensor.dateTime;
+  })
+
+  // DELETE {...} INSERT{...}
+  var bindingsText = 'INSERT DATA {' +
+    '?sensorURI rdf:type        s:sensor. ' +
+    '?sensorURI rdfs:comment    ?desc. ' +
+    '?sensorURI s:manufacturer  ?manu.' +
+    '?sensorURI s:dataSheet     ?datasheet.' +
+    '?sensorURI s:priceInEuro   ?price.' +
+    '?sensorURI s:lifePeriod    ?life.' +
+    '?sensorURI s:image         ?image.' +
+    '?sensorURI s:isValid       ?validation.';
+
+  sensor.label.forEach(element => {
+    bindingsText = bindingsText.concat(
+      '?sensorURI rdfs:label ' + JSON.stringify(element.value) + '@' + element.lang + '. '
+    );
+  });
+
+  sensor.device.forEach(element => {
+    bindingsText = bindingsText.concat(
+      '?sensorURI s:isSensorOf s:' + element.deviceUri.slice(34) + '. '
+    );
+  });
+
+  sensor.sensorElement.forEach(element => {
+    var string = '?sensorURI s:hasElement s:' + element.uri + '. ' +
+      's:' + element.uri + ' s:canMeasure s:' + element.phenomenonUri.slice(34) + '. ' +
+      's:' + element.uri + ' s:hasAccuracyUnit <' + element.unitOfAccuracy + '>. ' +
+      's:' + element.uri + ' s:accuracyValue ' + JSON.stringify(element.accuracyValue) + '.';
+    bindingsText = bindingsText.concat(string)
+  });
+
+  bindingsText = bindingsText.concat('}')
+  // TODO: Add dynamic description language tag!
+  // LOG and EXECTUE UPDATE 
+  console.log(bindingsText)
+  return historyClient
+    .query(bindingsText)
+    .bind({
+      sensorURI: { value: senphurl + sensor.uri + '_' + sensor.dateTime, type: 'uri' },
+      desc: { value: sensor.description, lang: "en" },
+      manu: sensor.manufacturer,
+      datasheet: { value: sensor.datasheet, type: 'uri' },
+      price: { value: sensor.price, type: 'decimal' },
+      life: { value: sensor.lifeperiod, type: 'integer' },
+      image: { value: sensor.image, type: 'uri' },
+      validation: { value: sensor.validation, type: 'boolean' }
+    })
+    .execute();
+}
+
+module.exports.createNewSensor = function (sensor) {
+  console.log(sensor);
+  var senphurl = 'http://www.opensensemap.org/SENPH#';
+  sensor.sensorElement.forEach(element => {
+    element['uri'] = "sensorElement_" + sensor.uri + "_" + element.phenomenonUri.slice(34);
+  })
+
+  // DELETE {...} INSERT{...}
+  var bindingsText = 'INSERT DATA {' +
+    '?sensorURI rdf:type        s:sensor. ' +
+    '?sensorURI rdfs:comment    ?desc. ' +
+    '?sensorURI s:manufacturer  ?manu.' +
+    '?sensorURI s:dataSheet     ?datasheet.' +
+    '?sensorURI s:priceInEuro   ?price.' +
+    '?sensorURI s:lifePeriod    ?life.' +
+    '?sensorURI s:image         ?image.' +
+    '?sensorURI s:isValid       ?validation.';
+
+  sensor.label.forEach(element => {
+    bindingsText = bindingsText.concat(
+      '?sensorURI rdfs:label ' + JSON.stringify(element.value) + '@' + element.lang + '. '
+    );
+  });
+
+  sensor.device.forEach(element => {
+    bindingsText = bindingsText.concat(
+      '?sensorURI s:isSensorOf s:' + element.deviceUri.slice(34) + '. '
+    );
+  });
+
+  sensor.sensorElement.forEach(element => {
+    var string = '?sensorURI s:hasElement s:' + element.uri + '. ' +
+      's:' + element.uri + ' s:canMeasure s:' + element.phenomenonUri.slice(34) + '. ' +
+      's:' + element.uri + ' s:hasAccuracyUnit <' + element.unitOfAccuracy + '>. ' +
+      's:' + element.uri + ' s:accuracyValue ' + JSON.stringify(element.accuracyValue) + '.';
+    bindingsText = bindingsText.concat(string)
+  });
+
+  bindingsText = bindingsText.concat('}')
+  // TODO: Add dynamic description language tag!
+  // LOG and EXECTUE UPDATE 
+  console.log(bindingsText)
+  return client
+    .query(bindingsText)
+    .bind({
+      sensorURI: { value: senphurl + sensor.uri, type: 'uri' },
+      desc: { value: sensor.description, lang: "en" },
+      manu: sensor.manufacturer,
+      datasheet: { value: sensor.datasheet, type: 'uri' },
+      price: { value: sensor.price, type: 'decimal' },
+      life: { value: sensor.lifeperiod, type: 'integer' },
+      image: { value: sensor.image, type: 'uri' },
+      validation: { value: sensor.validation, type: 'boolean' }
+    })
+    .execute();
+}
 
 
 // //get a single device identified by its iri @returns the device's labels, descriptions, website, image, contact and compatible sensors

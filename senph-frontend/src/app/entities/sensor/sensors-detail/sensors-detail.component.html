@@ -1,135 +1,237 @@
 <div *ngIf="sensor != undefined">
-  <!-- <mat-toolbar style="background-color: #666666c6;" class="example-toolbar">
-    <span class="title-center">
-      <h4 class="capitalize" style="color: #ffd63e; font-weight:600;">{{sensor.labels[0].value}}</h4>
-    </span>
-    <button class="btn btn-primary btn-senph" (click)="editButtonClick(uri)">Edit</button>
-  </mat-toolbar> -->
 
-  <senph-hero-banner [title]="sensor?.labels[0].value" (myEvent)="editButtonClick(uri)" [button]="true">
+  <senph-hero-banner [title]="prefLabel?.value" [valid]="sensor.validation?.value" [subtitle]="sensor?.iri.value" (myEvent)="button1(uri)"
+    [button]="historic.button1" (myEvent2)="getHistory(uri)" [button2]="historic.button2">
   </senph-hero-banner>
 
-  <!-- <h1 class="headline-border detail-body"></h1> -->
-  <div class="article detail-body">
-    <p class="siteSub">From Wikipedia, the free encyclopedia</p>
-    <p class="roleNote">This article is about the {{sensor.labels[0].value}}. For equivalent sensors, see <a
-        class="link-senph" href="/sensor/sameAs/{{sensor.labels[0].value}}">{{sensor.labels[0].value}}-Equivalents.</a>
-    </p>
-
-    <div *ngIf="sensor.image[0] != undefined" class="articleRight">
-      <div class="articleRightInner">
-        <img src="{{sensor.image[0].value}}" alt="{{sensor.labels[0].value}}" />
+  <section *ngIf="sensorHistory">
+    <div class="list is-hoverable">
+      <div class="list-item">
+        <div class="columns is-mobile is-multiline is-centered">
+          <div class="column is-3">
+            Index
+          </div>
+          <div class="column is-9">
+            <strong>
+              URI
+            </strong>
+          </div>
+        </div>
       </div>
-      The {{sensor.labels[0].value}}
-    </div>
-    <p>{{sensor.description[0].value}}</p>
-    <div class="contentsPanel">
-      <div class="contentsHeader">Contents</div>
-      <ul>
-        <li><span>1</span><a href="/sensor/{{uri}}#uri">URI</a> </li>
-        <li><span>2</span><a href="/sensor/{{uri}}#labels">Labels</a> </li>
-        <li><span>3</span><a href="/sensor/{{uri}}#price">Price Category</a></li>
-        <li><span>4</span><a href="/sensor/{{uri}}#manufacturer">Manufacturer</a></li>
-        <li><span>5</span><a href="/sensor/{{uri}}#lifeperiod">Life period</a></li>
-        <li><span>6</span><a href="/sensor/{{uri}}#datasheet">Data sheet</a></li>
-        <li><span>7</span><a href="/sensor/{{uri}}#phenomena">Measurable phenomena</a></li>
-      </ul>
-    </div>
-    <h2 id="uri">URI</h2>
-    <p>The URI of the {{sensor.labels[0].value}} is: </p>
-    <b>{{sensor.iri[0].value}}</b>
-    <h2 id="labels">Labels</h2>
-    <p>These are the available labels for the {{sensor.labels[0].value}} Sensor:</p>
-    <ul>
-      <li *ngFor="let label of sensor.labels">
-        <b>{{label.value}}</b>
-      </li>
-    </ul>
-    <div *ngIf="sensor.price[0] != undefined">
-      <h2 id="price">Price Category</h2>
-      <p>The price category of the {{sensor.labels[0].value}} is:</p>
-      <div [ngSwitch]="sensor.price[0].value">
-        <div *ngSwitchCase="1">
-          <b>
-            €
-          </b>
-        </div>
-        <div *ngSwitchCase="2">
-          <b>
-            €€
-          </b>
-        </div>
-        <div *ngSwitchCase="3">
-          <b>
-            €€€
-          </b>
-        </div>
-        <div *ngSwitchDefault>
-          The price category of this sensor is currently unknown.
+      <div class="list-item" *ngFor="let version of sensorHistory;let i = index"
+        [class.selected]="version === selectedVersion" (click)=redirectHistoricDetails(uri,version.sensor.value)>
+        <div class="columns is-mobile is-multiline is-centered">
+          <div class="column is-3">
+            {{i+1}}
+          </div>
+          <div class="column is-9">
+            {{version.sensor.value}}
+          </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <div *ngIf="sensor.manufacturer[0] != undefined">
-      <h2 id="manufacturer">Manufacturer</h2>
-      <p>The manufacturer of the {{sensor.labels[0].value}} is:</p>
-      <b>{{sensor.manufacturer[0].value}}</b>
+
+  <section class="section" *ngIf="!sensorHistory">
+    <div class="container is-fluid">
+      <div class="tile is-ancestor">
+        <div class="tile is-vertical is-8">
+          <div class="tile">
+            <!-- <senph-uri-tile [parent]="sensor"></senph-uri-tile> -->
+            <div class="tile is-parent is-vertical">
+              <article class="tile is-child notification is-warning">
+                <p class="title">URI</p>
+                <div class="content">
+                  <strong>
+                    {{sensor.iri.value}}
+                  </strong>
+                </div>
+              </article>
+              <article class="tile is-child notification is-warning">
+                <p class="title">Labels</p>
+                <p class="subtitle">These are the available labels in various languages for the
+                  {{prefLabel?.value}}:</p>
+                <div class="columns is-mobile is-multiline is-centered">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      <strong>
+
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>
+                        Label
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>
+                        Language
+                      </strong>
+                    </p>
+                  </div>
+                </div>
+                <div class="columns is-mobile is-multiline is-centered"
+                  *ngFor="let label of sensor.labels;let i = index">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      {{i+1}}
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      {{label.value}}
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      {{search(label["xml:lang"], "val", languageArray)}}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <div class="tile is-parent">
+              <article class="tile is-child notification is-warning">
+                <p class="title">Description</p>
+                <div class="content">
+                  <strong>
+                    {{sensor.description.value}}
+                  </strong>
+                </div>
+              </article>
+            </div>
+          </div>
+          <div class="tile is-parent">
+
+            <article class="tile is-child notification is-danger">
+              <p class="title">Measurable Phenomena</p>
+              <p class="subtitle">These are the phenomena that can be measured using the {{prefLabel?.value}}
+                Sensor:
+              </p>
+              <div class="content">
+                <div class="columns is-mobile is-multiline is-centered">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      <strong>
+
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>URI</strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>Unit</strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <strong>Value of Accuracy</strong>
+                    </p>
+                  </div>
+                </div>
+                <div class="columns is-mobile is-multiline is-centered"
+                  *ngFor="let selem of sensor.sensorElements;let i = index">
+                  <div class="column is-1">
+                    <p class="bd-notification is-primary">
+                      <strong>
+                        {{i+1}}
+                      </strong>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <a class=""
+                        (click)="redirectDomain(selem.phenomenon.value, '/phenomenon/')">{{selem.phenomenon.value}}</a>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      <a *ngIf="unitsArray" class="" href="{{selem.unit?.value}}" target="_blank">
+                        <!-- TODO: FIX REOLOADING ISSUE -->
+                        {{searchUnit(selem.unit?.value, unitsArray)}}
+                      </a>
+                    </p>
+                  </div>
+                  <div class="column is-fullwidth">
+                    <p class="bd-notification is-primary">
+                      &plusmn; {{selem.accVal?.value}}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div class="tile is-vertical">
+          <div class="tile">
+            <div class="tile is-parent">
+              <article class="tile is-child notification is-dark">
+                <p class="title">Price</p>
+                <p class="subtitle">The estimated price in euro is:</p>
+                <div class="content">
+                  <strong>
+                    {{sensor.price.value}} €
+                  </strong>
+                </div>
+              </article>
+            </div>
+            <div class="tile is-parent"
+              *ngIf="sensor.image && sensor.image.value != 'undefined' && sensor.image.value != 'http://server/unset-base/undefined'">
+              <article class=" tile is-child notification is-dark">
+                <figure class="image is-256x256">
+                  <img class="is-rounded" src="{{sensor.image.value}}">
+                </figure>
+                <p>
+                  The {{prefLabel?.value}}. <a href="{{sensor.image.value}}">Source</a>
+                </p>
+              </article>
+            </div>
+          </div>
+          <div class="tile is-vertical is-parent">
+            <article class="tile is-child notification is-dark">
+              <p class="title">Manufacturer</p>
+              <p class="subtitle">The manufacturer of this sensor is:</p>
+              <div class="content">
+                <strong>
+                  {{sensor.manufacturer.value}}
+                </strong>
+              </div>
+            </article>
+            <article class="tile is-child notification is-dark">
+              <p class="title">Life period</p>
+              <p class="subtitle">The estimated life period of the {{prefLabel?.value}} is:</p>
+              <div class="content">
+                <strong>
+                  <p *ngIf="sensor.lifeperiod && sensor.lifeperiod.value != 'undefined'">{{sensor.lifeperiod.value}}
+                    Days
+                  </p>
+                  <p *ngIf="!sensor.lifeperiod || sensor.lifeperiod.value == 'undefined' ">Currently not specified.</p>
+                </strong>
+              </div>
+            </article>
+            <article class="tile is-child notification is-dark">
+              <p class="title">Datasheet</p>
+              <p class="subtitle">You can find the datasheet of this sensor at:</p>
+              <div class="content">
+                <strong>
+                  <a class="" href="{{sensor.datasheet.value}}" target="_blank">
+                    {{sensor.datasheet.value}}
+                  </a>
+                </strong>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <div *ngIf="sensor.lifeperiod[0] != undefined">
-      <h2 id="lifeperiod">Life period</h2>
-      <p>The life period of the {{sensor.labels[0].value}} is:</p>
-      <b>{{sensor.lifeperiod[0].value}}</b>
-    </div>
-
-    <div *ngIf="sensor.datasheet[0] != undefined">
-      <h2 id="datasheet">Datasheet</h2>
-      <p>The datasheet of the {{sensor.labels[0].value}} is:</p>
-      <b><a class="link-senph" href="{{sensor.datasheet[0].value}}"
-          target="_blank">{{sensor.datasheet[0].value}}</a></b>
-    </div>
-
-    <div *ngIf="sensor.sensorElements[0] != undefined">
-      <h2 id="phenomena">Measurable Phenomena</h2>
-      <p>These are the phenomena that can be measured using the {{sensor.labels[0].value}} Sensor:</p>
-      <table class="table is-striped is-hoverable">
-        <thead>
-          <tr>
-            <th>Phenomenon URI</th>
-            <th>Unit</th>
-            <th>Accuracy</th>
-          </tr>
-        </thead>
-        <tfoot>
-          <tr>
-            <th></th>
-            <th></th>
-            <th></th>
-          </tr>
-        </tfoot>
-        <tbody>
-          <tr *ngFor="let selem of sensor.sensorElements">
-            <td>
-              <button class="btn btn-link link-senph"
-                (click)="redirectDomain(selem.phenomena.value, '/phenomenon/')">{{selem.phenomena.value}}</button>
-            </td>
-            <td>
-              <a class="link-senph" href="{{selem.unit?.value}}" target="_blank">{{selem.unit?.value}}</a>
-
-            </td>
-            <td>
-              &plusmn; {{selem.accVal?.value}}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="categories">
-      <a href="https://opensensemap.org/" target="_blank">openSenseMap </a> <a href="https://www.sensebox.de/en/"
-        target="_blank">senseBox Project</a>
-    </div>
-
-  </div>
-
+  </section>
 </div>

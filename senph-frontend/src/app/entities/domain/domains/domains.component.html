@@ -1,48 +1,65 @@
-<senph-hero-banner title="Discover doamins"
-  subtitle="Here you can find a list of all domains that are registered in SOWA"></senph-hero-banner>
+<senph-hero-banner title="Domains"
+  subtitle="Discover all domains registered in SOWA below"></senph-hero-banner>
 
-<div class="container">
+<div class="container is-fluid">
   <div class="notification">
-
-
     <div class="field is-grouped">
-      <p class="control is-expanded">
-        <input class="input" type="text" #myInput placeholder="Type to filter domains..." [(ngModel)]="domain">
-      </p>
-      <p class="control">
-        <a (click)="filterItem(myInput.value)" class="button is-info">
-          Search
-        </a>
+      <p class="control  has-icons-left is-expanded">
+        <input class="input" type="text" #myInput placeholder="Type to filter domains..." [(ngModel)]="searchTerm">
+        <span class="icon is-left">
+          <fa-icon [icon]="faSearch"></fa-icon>
+        </span>
       </p>
     </div>
 
-    <table class="table is-hoverable is-striped">
-      <thead>
-        <tr>
-          <th><abbr title="Number">No.</abbr></th>
-          <th>Label</th>
-          <th><abbr title="Uniform Resource Identifier">URI</abbr></th>
-        </tr>
-      </thead>
-      <tfoot>
-        <tr>
-          <th><abbr title="Number">No.</abbr></th>
-          <th>Label</th>
-          <th><abbr title="Uniform Resource Identifier">URI</abbr></th>
-        </tr>
-      </tfoot>
-      <tbody>
-        <tr *ngFor="let domain of domainsArrayFiltered;let i = index" [hidden]='domain.domain.type != "uri"'
-          [class.selected]="domain === selectedDomain">
-          <th>{{i+1}}</th>
-          <td>
-            <a (click)="onSelect(domain)" class="button"
-              title="{{domain.label[0]?.value}}">{{domain.label[0]?.value}}</a>
-          </td>
-          <td>{{domain.domain.value}}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="list is-hoverable">
+      <div class="list-item">
+        <div class="columns is-mobile is-multiline is-centered">
+          <div class="column is-1">
+
+          </div>
+          <div class="column is-5">
+            <strong>
+              Label
+            </strong>
+          </div>
+          <div class="column is-5">
+            <strong>
+              URI
+            </strong>
+          </div>
+          <div class="column is-1">
+            <strong>
+              Verified
+            </strong>
+          </div>
+
+        </div>
+      </div>
+      <div class="list-item" *ngFor="let domains of domainsArray | filterPipe:searchTerm;let i = index"
+        [class.selected]="domains === selectedDomain" (click)=onSelect(domains)>
+        <div class="columns is-mobile is-multiline is-centered">
+          <div class="column is-1">
+            {{i+1}}
+          </div>
+          <div class="column is-5">
+            {{domains.domainLabel[0]?.value}}
+          </div>
+          <div class="column is-5">
+            {{domains.domain.value}}
+          </div>
+          <div class="column is-1">
+            <span class="fa fa-stack fa-xs" *ngIf="domains.validation[0]?.value == 'true'">
+              <i class="fa fa-certificate fa-stack-2x"></i>
+              <i class="fa fa-check fa-stack-1x fa-inverse"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pageloader is-bottom-to-top" [ngClass]="{'is-active': pageLoadActive === '1' }"><span
+        class="title">Pageloader</span></div>
 
   </div>
 </div>
